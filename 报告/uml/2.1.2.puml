@@ -1,0 +1,66 @@
+@startuml
+interface PostElement {
+  + accept(visitor: PostVisitor): String
+}
+
+class Post implements PostElement {
+  - id: int
+  - title: String
+  - content: String
+  - userId: int
+  - boardId: int
+  - createdAt: Date
+  - attachment: String
+  - views: int
+  - replyCount: int
+  - username: String
+  - pinned: boolean
+  - likeCount: int
+  + accept(visitor: PostVisitor): String
+  + getId(): int
+  + setId(id: int): void
+  + getTitle(): String
+  + setTitle(title: String): void
+  + getContent(): String
+  + setContent(content: String): void
+  + getUserId(): int
+  + setUserId(userId: int): void
+  + getBoardId(): int
+  + setBoardId(boardId: int): void
+  + getCreatedAt(): Date
+  + setCreatedAt(createdAt: Date): void
+  + getAttachment(): String
+  + setAttachment(attachment: String): void
+  + getViews(): int
+  + setViews(views: int): void
+  + getReplyCount(): int
+  + setReplyCount(replyCount: int): void
+  + getUsername(): String
+  + setUsername(username: String): void
+  + isPinned(): boolean
+  + setPinned(pinned: boolean): void
+  + getLikeCount(): int
+  + setLikeCount(likeCount: int): void
+}
+
+abstract class PostDecorator implements PostElement {
+  - post: PostElement
+  + PostDecorator(post: PostElement)
+  + accept(visitor: PostVisitor): String
+}
+
+class AttachmentDecorator extends PostDecorator {
+  - attachmentPath: String
+  - fileName: String
+  + AttachmentDecorator(post: PostElement, attachmentPath: String, fileName: String)
+  + getAttachmentPath(): String
+  + getFileName(): String
+  + getContent(): String
+  + accept(visitor: PostVisitor): String
+}
+
+PostElement <|-- Post
+PostElement <|-- PostDecorator
+PostDecorator <|-- AttachmentDecorator
+PostDecorator *-- PostElement : contains
+@enduml

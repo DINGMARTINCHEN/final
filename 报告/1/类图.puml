@@ -1,0 +1,68 @@
+@startuml
+' 核心实体类 - 用户
+class User {
+  - id: int
+  - username: String
+  - password: String
+  - role: String  // "user"/"admin"
+  + register(): boolean
+  + login(): boolean
+  + getRole(): String
+}
+
+' 核心实体类 - 帖子（基础类）
+class Post {
+  - id: int
+  - title: String
+  - content: String
+  - userId: int
+  - createTime: Date
+  - viewCount: int
+  - likeCount: int
+  - replyCount: int
+  - pinned: boolean
+  + addLikeCount(): void
+  + addReplyCount(): void
+  + setPinned(pinned: boolean): void
+}
+
+' 帖子子类 - 按类型划分
+class StandardPost extends Post {
+  + StandardPost(title: String, content: String, userId: int)
+}
+class PinnedPost extends Post {
+  + PinnedPost(title: String, content: String, userId: int)
+}
+class AnnouncementPost extends Post {
+  + AnnouncementPost(title: String, content: String, userId: int)
+}
+
+' 扩展类 - 附件
+class Attachment {
+  - id: int
+  - postId: int
+  - filePath: String
+  - fileName: String
+  - fileType: String
+  - fileSize: long
+  + download(): boolean
+}
+
+' 扩展类 - 通知
+class Notification {
+  - id: int
+  - postId: int
+  - receiverId: int
+  - type: String  // "LIKE"/"REPLY"/"PINNED"
+  - content: String
+  - createTime: Date
+  - isRead: boolean
+  + markAsRead(): void
+}
+
+' 关联关系
+User "1" -- "*" Post : 发布
+Post "1" -- "*" Attachment : 包含
+Post "1" -- "*" Notification : 触发
+User "1" -- "*" Notification : 接收
+@enduml

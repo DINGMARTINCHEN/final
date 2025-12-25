@@ -1,0 +1,48 @@
+@startuml
+interface SortStrategy {
+  + sort(posts: List<Post>): void
+}
+
+class SortByCreateTime implements SortStrategy {
+  + sort(posts: List<Post>): void
+}
+
+class SortByViewCount implements SortStrategy {
+  + sort(posts: List<Post>): void
+}
+
+class SortByLikeCount implements SortStrategy {
+  + sort(posts: List<Post>): void
+}
+
+class PostSortContext {
+  - sortStrategy: SortStrategy
+  + setSortStrategy(strategy: SortStrategy): void
+  + executeSort(posts: List<Post>): void
+}
+
+class Post {
+  - id: int
+  - title: String
+  - createTime: Date
+  - viewCount: int
+  - likeCount: int
+  - pinned: boolean
+  + getCreateTime(): Date
+  + getViewCount(): int
+  + getLikeCount(): int
+  + isPinned(): boolean
+}
+
+class PostController {
+  - sortContext: PostSortContext
+  + sortPosts(posts: List<Post>, sortType: String): void
+}
+
+SortStrategy <|.. SortByCreateTime
+SortStrategy <|.. SortByViewCount
+SortStrategy <|.. SortByLikeCount
+PostSortContext *-- SortStrategy: 持有
+PostController --> PostSortContext: 使用
+PostSortContext --> Post: 排序目标
+@enduml

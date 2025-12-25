@@ -1,0 +1,62 @@
+@startuml
+
+' 抽象产品
+class Post {
+  - id: int
+  - title: String
+  - content: String
+  + Post(title: String, content: String)
+}
+
+' 具体产品
+class StandardPost extends Post {
+  + StandardPost(title: String, content: String)
+}
+
+class PinnedPost extends Post {
+  + PinnedPost(title: String, content: String)
+}
+
+class AnnouncementPost extends Post {
+  + AnnouncementPost(title: String, content: String)
+}
+
+' 抽象工厂
+interface PostFactory {
+  + createPost(title: String, content: String, userId: int, boardId: int, attachment: String): Post
+}
+
+' 具体工厂
+class StandardPostFactory implements PostFactory {
+  + createPost(title: String, content: String, userId: int, boardId: int, attachment: String): Post
+}
+
+class PinnedPostFactory implements PostFactory {
+  + createPost(title: String, content: String, userId: int, boardId: int, attachment: String): Post
+}
+
+class AnnouncementPostFactory implements PostFactory {
+  + createPost(title: String, content: String, userId: int, boardId: int, attachment: String): Post
+}
+
+' 工厂选择器
+class PostFactorySelector {
+  + getFactory(user: User, factoryType: String): PostFactory
+}
+
+' 用户类
+class User {
+  - id: int
+  - username: String
+  - role: String
+  + getRole(): String
+}
+
+' 关系
+
+PostFactorySelector --> PostFactory
+PostFactorySelector --> User
+StandardPostFactory --> StandardPost
+PinnedPostFactory --> PinnedPost
+AnnouncementPostFactory --> AnnouncementPost
+@enduml

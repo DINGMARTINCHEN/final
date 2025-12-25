@@ -1,0 +1,19 @@
+@startuml
+actor "普通用户" as User
+participant "GUI视图\n(PostCreateView)" as View
+participant "帖子控制器\n(PostController)" as Controller
+participant "帖子工厂\n(PostFactory)" as Factory
+participant "附件装饰器\n(AttachmentDecorator)" as Decorator
+participant "帖子服务\n(PostService)" as Service
+
+User -> View: 填写帖子标题/内容，选择附件
+User -> View: 点击「发布」按钮
+View -> Controller: 调用createPostWithAttachment()
+Controller -> Factory: 选择StandardPostFactory
+Factory -> Factory: 创建StandardPost实例
+Controller -> Decorator: 封装附件信息（装饰Post）
+Controller -> Service: 调用savePost()持久化
+Service --> Controller: 返回发布结果
+Controller --> View: 刷新界面/提示发布成功
+View --> User: 展示发布成功弹窗
+@enduml

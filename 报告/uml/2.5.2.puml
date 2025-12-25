@@ -1,0 +1,83 @@
+@startuml
+interface PostSubject {
+  + attach(observer: NotificationObserver): void
+  + detach(observer: NotificationObserver): void
+  + notifyObservers(notification: Notification): void
+}
+
+interface PostComponent {
+  + getId(): int
+  + getTitle(): String
+  + getContent(): String
+  + getUserId(): int
+}
+
+class BasePost implements PostComponent, PostSubject {
+  - id: int
+  - title: String
+  - content: String
+  - userId: int
+  - observers: List<NotificationObserver>
+  - likeCount: int
+  - replyCount: int
+  - pinned: boolean
+  + BasePost(title: String, content: String, userId: int)
+  + attach(observer: NotificationObserver): void
+  + detach(observer: NotificationObserver): void
+  + notifyObservers(notification: Notification): void
+  + addLikeCount(): void
+  + addReplyCount(): void
+  + setPinned(pinned: boolean): void
+}
+
+class Notification {
+  - id: int
+  - type: String
+  - content: String
+  - createTime: Date
+  - receiverId: int
+  - isRead: boolean
+  + Notification(type: String, content: String, receiverId: int)
+  + getType(): String
+  + getContent(): String
+  + getCreateTime(): Date
+  + isRead(): boolean
+  + setRead(isRead: boolean): void
+}
+
+interface NotificationObserver {
+  + update(post: PostSubject, notification: Notification): void
+}
+
+class UserNotificationObserver implements NotificationObserver {
+  - userId: int  // 关联的用户ID
+  + UserNotificationObserver(userId: int)
+  + update(post: PostSubject, notification: Notification): void
+}
+
+class AdminNotificationObserver implements NotificationObserver {
+  + update(post: PostSubject, notification: Notification): void
+}
+
+class SystemMsgCenterObserver implements NotificationObserver {
+  - notifications: List<Notification>
+  + update(post: PostSubject, notification: Notification): void
+  + getUnreadCount(userId: int): int
+  + markAsRead(notificationId: int): void
+}
+
+class NotificationController {
+  + subscribePost(userId: int, post: PostSubject): void
+  + unsubscribePost(userId: int, post: PostSubject): void
+  + getUnreadMsgCount(userId: int): int
+}
+
+PostSubject <|-- BasePost
+PostComponent <|-- BasePost
+NotificationObserver <|.. UserNotificationObserver
+NotificationObserver <|.. AdminNotificationObserver
+NotificationObserver <|.. SystemMsgCenterObserver
+BasePost *-- NotificationObserver
+NotificationController --> PostSubject
+NotificationController --> SystemMsgCenterObserver
+@enduml

@@ -1,0 +1,82 @@
+@startuml
+' 样式优化：简化边框、统一配色
+skinparam usecase {
+  BackgroundColor #F5F8FF
+  BorderColor #4A6FA5
+  FontSize 10
+}
+skinparam actor {
+  BackgroundColor #E8F4FD
+  BorderColor #2980B9
+  FontSize 11
+}
+skinparam package {
+  BackgroundColor #F9FAFB
+  BorderColor #DDDDDD
+  FontSize 10
+}
+skinparam arrow {
+  Thickness 1
+  Color #333333
+}
+
+' 参与者置顶（减少连线长度）
+actor "普通用户" as NormalUser <<(U, #2980B9)>>
+actor "管理员" as Admin <<(A, #E74C3C)>>
+' 管理员继承普通用户权限（用extends简化连线）
+Admin --|> NormalUser : 继承所有权限
+
+' 模块按“功能+权限”就近排列（参与者正下方）
+package "用户管理模块" #F5F8FF {
+  (用户注册) as UC1
+  (用户登录) as UC2
+  (查看个人信息) as UC3
+}
+
+package "帖子管理模块" #EAF6FA {
+  (发布普通帖) as UC4
+  (编辑/删除自有帖子) as UC5
+  (添加/下载附件) as UC6
+  (发布置顶帖) as UC7 <<Admin专属>>
+  (发布公告帖) as UC8 <<Admin专属>>
+  (管理所有帖子) as UC9 <<Admin专属>>
+}
+
+package "互动功能模块" #FDF2F8 {
+  (帖子点赞/取消点赞) as UC10
+  (回复帖子) as UC11
+  (订阅/取消帖子通知) as UC12
+}
+
+package "消息通知模块" #E8F4F8 {
+  (接收点赞/回复通知) as UC15
+  (查看消息中心/标记已读) as UC16
+  (接收置顶/系统通知) as UC17 <<Admin专属>>
+}
+
+package "展示排序模块" #F5F5F5 {
+  (按时间/浏览量/点赞数排序) as UC13
+  (置顶帖优先展示) as UC14
+}
+
+' 布局调整：参与者与模块就近对齐（减少连线交叉）
+NormalUser -[#2980B9]down- UC1
+NormalUser -[#2980B9]down- UC2
+NormalUser -[#2980B9]down- UC3
+NormalUser -[#2980B9]down- UC4
+NormalUser -[#2980B9]down- UC5
+NormalUser -[#2980B9]down- UC6
+NormalUser -[#2980B9]down- UC10
+NormalUser -[#2980B9]down- UC11
+NormalUser -[#2980B9]down- UC12
+NormalUser -[#2980B9]down- UC13
+NormalUser -[#2980B9]down- UC14
+NormalUser -[#2980B9]down- UC15
+NormalUser -[#2980B9]down- UC16
+
+' 管理员专属用例连线（红色区分）
+Admin -[#E74C3C]down- UC7
+Admin -[#E74C3C]down- UC8
+Admin -[#E74C3C]down- UC9
+Admin -[#E74C3C]down- UC17
+@enduml

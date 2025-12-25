@@ -1,0 +1,71 @@
+@startuml
+interface PostComponent {
+  + getId(): int
+  + getTitle(): String
+  + getContent(): String
+  + getUserId(): int
+  + getCreatedTime(): Date
+}
+
+class BasePost implements PostComponent {
+  - id: int
+  - title: String
+  - content: String
+  - userId: int
+  - createdTime: Date
+  - viewCount: int
+  - likeCount: int
+  - pinned: boolean
+  + BasePost(title: String, content: String, userId: int)
+  + getId(): int
+  + getTitle(): String
+  + getContent(): String
+  + getUserId(): int
+  + getCreatedTime(): Date
+  // 其他核心getter/setter
+}
+
+abstract class PostDecorator implements PostComponent {
+  - post: PostComponent
+  + PostDecorator(post: PostComponent)
+  + getId(): int
+  + getTitle(): String
+  + getContent(): String
+  + getUserId(): int
+  + getCreatedTime(): Date
+}
+
+class Attachment {
+  - filePath: String  // 附件存储绝对路径
+  - fileName: String  // 附件显示名称
+  - fileType: String  // 附件类型（pdf/png/doc等）
+  - fileSize: long    // 附件大小（字节）
+  + Attachment(filePath: String, fileName: String, fileType: String, fileSize: long)
+  + getFilePath(): String
+  + getFileName(): String
+  + getFileType(): String
+  + getFileSize(): long
+}
+
+class AttachmentDecorator extends PostDecorator {
+  - attachments: List<Attachment>  // 支持多附件
+  + AttachmentDecorator(post: PostComponent)
+  + addAttachment(attachment: Attachment): void
+  + removeAttachment(fileName: String): boolean
+  + getAttachments(): List<Attachment>
+  + downloadAttachment(fileName: String): boolean  // 附件下载逻辑
+  + getContent(): String  // 重写：嵌入附件信息
+}
+
+class PostController {
+  + createPostWithAttachment(title: String, content: String, userId: int, attachments: List<Attachment>): PostComponent
+  + getPostContentWithAttachment(post: PostComponent): String
+}
+
+PostComponent <|-- BasePost
+PostComponent <|-- PostDecorator
+PostDecorator <|-- AttachmentDecorator
+AttachmentDecorator *-- Attachment: 包含
+PostController --> PostComponent: 使用
+PostController --> Attachment: 封装
+@enduml

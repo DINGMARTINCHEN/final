@@ -1,0 +1,43 @@
+@startuml
+' 抽象产品：帖子
+class Post {
+  - id: int
+  - title: String
+  - content: String
+  - userId: int
+  - boardId: int
+  - createdAt: Date
+  - attachment: String
+  - views: int
+  - replyCount: int
+  - username: String
+  - pinned: boolean
+  - likeCount: int
+  + Post(title: String, content: String, userId: int, boardId: int, attachment: String)
+  + getId(): int
+  + setId(id: int): void
+  + getTitle(): String
+  + setTitle(title: String): void
+  + getContent(): String
+  + setContent(content: String): void
+  + isPinned(): boolean
+  + setPinned(pinned: boolean): void
+}
+
+' 具体产品
+class StandardPost extends Post {
+  + StandardPost(title: String, content: String, userId: int, boardId: int, attachment: String)
+}
+
+class PinnedPost extends Post {
+  + PinnedPost(title: String, content: String, userId: int, boardId: int, attachment: String)
+  + isPinned(): boolean
+}
+
+class AnnouncementPost extends Post {
+  + AnnouncementPost(title: String, content: String, userId: int, boardId: int, attachment: String)
+  + isPinned(): boolean
+}
+
+
+@enduml
