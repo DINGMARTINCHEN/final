@@ -22,22 +22,22 @@ import java.util.List;
 
 public class MainForumView extends JFrame {
     public User currentUser;
-    private PostController postController;
+    public PostController postController;
     private ReplyController replyController;
-    private LikeController likeController;
+    public LikeController likeController;
     public List<Post> currentPosts;
-    private Map<Integer, Post> rowToPostMap = new HashMap<>();  // 新增：行索引到帖子的映射
-    private boolean isSearching = false;  // 新增：标记是否处于搜索状态
-    private List<Post> searchResults = new ArrayList<>();  // 新增：搜索结果列表
-    private int selectedBoardId = -1;
-    private int currentPage = 1;
-    private int pageSize = 10;
+    public Map<Integer, Post> rowToPostMap = new HashMap<>();  // 新增：行索引到帖子的映射
+    public boolean isSearching = false;  // 新增：标记是否处于搜索状态
+    public List<Post> searchResults = new ArrayList<>();  // 新增：搜索结果列表
+    public int selectedBoardId = -1;
+    public int currentPage = 1;
+    public int pageSize = 10;
     public PostSorter postSorter;
     public String currentSort = "date";
 
-    private JTable postTable;
-    private DefaultTableModel tableModel;
-    private JLabel paginationLabel;
+    public JTable postTable;
+    public DefaultTableModel tableModel;
+    public JLabel paginationLabel;
     private JTextField searchField;
     private JComboBox<String> boardComboBox;
 
@@ -63,14 +63,14 @@ public class MainForumView extends JFrame {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchField = new JTextField(20);
         JButton searchButton = new JButton("搜索");
-        searchButton.addActionListener(e -> searchPosts(searchField.getText().trim(), postController));
+        searchButton.addActionListener(e -> postController.searchPosts(searchField.getText().trim(), postController, this));
 
         boardComboBox = new JComboBox<>(new String[]{"全部版块", "技术支持", "学习交流", "休闲娱乐", "校园生活"});
         boardComboBox.addActionListener(e -> {
             int selectedIndex = boardComboBox.getSelectedIndex();
             selectedBoardId = selectedIndex;
             currentPage = 1;
-            loadPostsForSelectedBoard();
+            postController.loadPostsForSelectedBoard(this);
         });
 
         JButton sortByDateButton = new JButton("按时间排序");
@@ -158,7 +158,7 @@ public class MainForumView extends JFrame {
         refreshButton.addActionListener(e -> {
             isSearching = false;
             searchField.setText("");
-            loadPostsForSelectedBoard();
+            postController.loadPostsForSelectedBoard(this);
         });
 
         JButton newPostButton = new JButton("发新帖");
@@ -167,11 +167,11 @@ public class MainForumView extends JFrame {
                 JOptionPane.showMessageDialog(this, "请先选择版块！");
                 return;
             }
-            new PostCreateView(currentUser, selectedBoardId, this::loadPostsForSelectedBoard);
+            new PostCreateView(currentUser, selectedBoardId, () -> postController.loadPostsForSelectedBoard(this));
         });
 
         JButton deleteButton = new JButton("删除帖子");
-        deleteButton.addActionListener(e -> deleteSelectedPost());
+        deleteButton.addActionListener(e -> postController.deleteSelectedPost(this));
 
         JButton userInfoButton = new JButton("个人信息");
         userInfoButton.addActionListener(e -> new UserInfoView(currentUser, () -> {
@@ -179,7 +179,7 @@ public class MainForumView extends JFrame {
         }));
 
         JButton myLikesButton = new JButton("我的点赞");
-        myLikesButton.addActionListener(e -> showMyLikedPosts());
+        myLikesButton.addActionListener(e -> postController.showMyLikedPosts(this));
 
         buttonPanel.add(refreshButton);
         buttonPanel.add(newPostButton);
@@ -195,37 +195,21 @@ public class MainForumView extends JFrame {
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         add(mainPanel);
 
-        loadPostsForSelectedBoard();
+        postController.loadPostsForSelectedBoard(this);
     }
 
     /**
      * 根据表格行索引获取对应的帖子对象
      * 使用映射确保准确性
      */
-    private Post getPostByTableRow(int tableRow) {
+    public Post getPostByTableRow(int tableRow) {
         return rowToPostMap.get(tableRow);
-    }
-
-    private void loadPostsForSelectedBoard() {
-        if (selectedBoardId == -1) return;
-
-        List<Post> posts = postController.getBoardPosts(selectedBoardId, currentPage, pageSize);
-        if (posts != null) {
-            // 为每个帖子设置点赞数
-            for (Post post : posts) {
-                int likeCount = likeController.getLikeCount(post.getId());
-                post.setLikeCount(likeCount);
-            }
-            currentPosts = posts;
-            postController.sortAndDisplayPosts(this);
-            updatePaginationInfo();
-        }
     }
 
     /**
      * 打开帖子详情页面
      */
-    private void openPostDetail(Post post) {
+    public void openPostDetail(Post post) {
         // 获取最新帖子信息
         Post latestPost = postController.getPostDetail(post.getId());
         if (latestPost == null) {
@@ -338,8 +322,8 @@ public class MainForumView extends JFrame {
             String result = likeController.likeWithVisitor(latestPost, currentUser.getId());
             JOptionPane.showMessageDialog(detailDialog, result);
             likeController.likeService.updateLikeButtonText(likeButton, latestPost.getId(), this, likeController);
-            loadPostsForSelectedBoard();
-            updatePostMetaInfo(detailDialog, latestPost.getId());
+            postController.loadPostsForSelectedBoard(this);
+            postController.updatePostMetaInfo(detailDialog, latestPost.getId(), this);
         });
         actionPanel.add(likeButton);
 
@@ -354,7 +338,7 @@ public class MainForumView extends JFrame {
                     if (success) {
                         JOptionPane.showMessageDialog(detailDialog, "已取消置顶！");
                         detailDialog.dispose();
-                        loadPostsForSelectedBoard();
+                        postController.loadPostsForSelectedBoard(this);
                     }
                 });
             } else {
@@ -364,7 +348,7 @@ public class MainForumView extends JFrame {
                     if (success) {
                         JOptionPane.showMessageDialog(detailDialog, "帖子已置顶！");
                         detailDialog.dispose();
-                        loadPostsForSelectedBoard();
+                        postController.loadPostsForSelectedBoard(this);
                     }
                 });
             }
@@ -389,7 +373,7 @@ public class MainForumView extends JFrame {
             JButton editButton = new JButton("编辑帖子");
             editButton.addActionListener(e -> {
                 detailDialog.dispose();
-                new EditPostView(currentUser, latestPost, this::loadPostsForSelectedBoard);
+                new EditPostView(currentUser, latestPost, () -> postController.loadPostsForSelectedBoard(this));
             });
             actionPanel.add(editButton);
         }
@@ -400,7 +384,7 @@ public class MainForumView extends JFrame {
 
         detailDialog.add(actionPanel, BorderLayout.NORTH);
         detailDialog.setVisible(true);
-        loadPostsForSelectedBoard();
+        postController.loadPostsForSelectedBoard(this);
     }
 
     private boolean canPinPost() {
@@ -426,7 +410,7 @@ public class MainForumView extends JFrame {
             JOptionPane.showMessageDialog(dialog, "回复发表成功！");
             replyTextArea.setText("");
             loadRepliesToTable(post.getId(), replyTableModel);
-            loadPostsForSelectedBoard();
+            postController.loadPostsForSelectedBoard(this);
         }
     }
 
@@ -478,244 +462,9 @@ public class MainForumView extends JFrame {
         return currentUser.getId() == post.getUserId();
     }
 
-    private void deleteSelectedPost() {
-        int row = postTable.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "请先选择要删除的帖子！");
-            return;
-        }
-
-        Post post = getPostByTableRow(row);
-        if (post == null) {
-            JOptionPane.showMessageDialog(this, "无法找到对应的帖子，请刷新后重试。");
-            return;
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "确认删除帖子《" + post.getTitle() + "》？此操作不可恢复！",
-                "删除确认", JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            boolean success = postController.deletePost(post.getId());
-            if (success) {
-                JOptionPane.showMessageDialog(this, "删除成功！");
-                loadPostsForSelectedBoard();
-            }
-        }
-    }
-
-    // 显示我的点赞帖子功能
-    private void showMyLikedPosts() {
-        List<Integer> likedPostIds = likeController.getLikedPostsByUser(currentUser.getId());
-        if (likedPostIds == null || likedPostIds.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "您还没有点赞过任何帖子！");
-            return;
-        }
-
-        JDialog likesDialog = new JDialog(this, "我的点赞", true);
-        likesDialog.setSize(800, 600);
-        likesDialog.setLocationRelativeTo(this);
-        likesDialog.setLayout(new BorderLayout());
-
-        JLabel titleLabel = new JLabel("我的点赞帖子 (" + likedPostIds.size() + " 个)", JLabel.CENTER);
-        titleLabel.setFont(new Font("宋体", Font.BOLD, 18));
-        likesDialog.add(titleLabel, BorderLayout.NORTH);
-
-        String[] columns = {"帖子ID", "标题", "点赞时间"};
-        DefaultTableModel likesTableModel = new DefaultTableModel(columns, 0);
-        JTable likesTable = new JTable(likesTableModel);
-
-        likesTable.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = likesTable.getSelectedRow();
-                    if (row >= 0) {
-                        int postId = (int) likesTableModel.getValueAt(row, 0);
-                        Post post = postController.getPostDetail(postId);
-                        if (post != null) {
-                            likesDialog.dispose();
-                            openPostDetail(post);
-                        }
-                    }
-                }
-            }
-        });
-
-        JScrollPane scrollPane = new JScrollPane(likesTable);
-        likesDialog.add(scrollPane, BorderLayout.CENTER);
-
-        JPanel bottomPanel = new JPanel();
-        JButton closeButton = new JButton("关闭");
-        closeButton.addActionListener(e -> likesDialog.dispose());
-        bottomPanel.add(closeButton);
-        likesDialog.add(bottomPanel, BorderLayout.SOUTH);
-
-        // 加载数据
-        for (Integer postId : likedPostIds) {
-            Post post = postController.getPostDetail(postId);
-            if (post != null) {
-                likesTableModel.addRow(new Object[]{
-                        postId,
-                        post.getTitle(),
-                        "点击查看详情"
-                });
-            }
-        }
-
-        likesDialog.setVisible(true);
-    }
-
-    private void updatePaginationInfo() {
+    public void updatePaginationInfo() {
         int totalPosts = isSearching ? searchResults.size() : currentPosts.size();
         paginationLabel.setText("第 " + currentPage + " 页 - 共 " + totalPosts + " 条帖子");
     }
 
-    /**
-     * 刷新帖子表格显示
-     * 建立行索引到帖子对象的映射关系
-     */
-    public void refreshPostTable() {
-        tableModel.setRowCount(0);
-        rowToPostMap.clear(); // 清空旧的映射关系
-
-        List<Post> postsToDisplay = isSearching ? searchResults : currentPosts;
-        if (postsToDisplay == null || postsToDisplay.isEmpty()) {
-            paginationLabel.setText("没有找到相关帖子");
-            return;
-        }
-
-        // 分离置顶帖子和普通帖子
-        List<Post> pinnedPosts = new ArrayList<>();
-        List<Post> normalPosts = new ArrayList<>();
-
-        for (Post post : postsToDisplay) {
-            if (post.isPinned()) {
-                pinnedPosts.add(post);
-            } else {
-                normalPosts.add(post);
-            }
-        }
-
-        // 只在非搜索状态下对当前列表进行排序
-        if (!isSearching) {
-            if ("date".equals(currentSort)) {
-                pinnedPosts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
-                normalPosts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
-            } else if ("views".equals(currentSort)) {
-                pinnedPosts.sort((p1, p2) -> Integer.compare(p2.getViews(), p1.getViews()));
-                normalPosts.sort((p1, p2) -> Integer.compare(p2.getViews(), p1.getViews()));
-            } else if ("likes".equals(currentSort)) {
-                pinnedPosts.sort((p1, p2) -> Integer.compare(p2.getLikeCount(), p1.getLikeCount()));
-                normalPosts.sort((p1, p2) -> Integer.compare(p2.getLikeCount(), p1.getLikeCount()));
-            }
-        }
-
-        int rowIndex = 0;
-
-        // 先显示置顶帖子
-        for (Post post : pinnedPosts) {
-            boolean hasLiked = likeController.hasLiked(currentUser.getId(), post.getId());
-            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
-
-            tableModel.addRow(new Object[]{
-                    post.getId(),
-                    "[置顶] " + post.getTitle(),
-                    post.getUsername(),
-                    post.getCreatedAt(),
-                    post.getViews(),
-                    post.getReplyCount(),
-                    post.getLikeCount(),
-                    status
-            });
-
-            // 建立映射关系
-            rowToPostMap.put(rowIndex, post);
-            rowIndex++;
-        }
-
-        // 再显示普通帖子
-        for (Post post : normalPosts) {
-            boolean hasLiked = likeController.hasLiked(currentUser.getId(), post.getId());
-            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
-
-            tableModel.addRow(new Object[]{
-                    post.getId(),
-                    post.getTitle(),
-                    post.getUsername(),
-                    post.getCreatedAt(),
-                    post.getViews(),
-                    post.getReplyCount(),
-                    post.getLikeCount(),
-                    status
-            });
-
-            // 建立映射关系
-            rowToPostMap.put(rowIndex, post);
-            rowIndex++;
-        }
-    }
-
-    /**
-     * 搜索帖子
-     *
-     * @param keyword
-     * @param postController
-     */
-    public void searchPosts(String keyword, PostController postController) {
-        if (keyword.isEmpty()) {
-            // 清空搜索状态，恢复显示所有帖子
-            isSearching = false;
-            searchResults.clear();
-            loadPostsForSelectedBoard();
-            return;
-        }
-
-        isSearching = true;
-        List<Post> results = postController.searchPosts(keyword);
-
-        if (results != null && !results.isEmpty()) {
-            searchResults = results;
-            // 为搜索结果设置点赞数
-            for (Post post : searchResults) {
-                int likeCount = likeController.getLikeCount(post.getId());
-                post.setLikeCount(likeCount);
-            }
-
-            refreshPostTable();
-            paginationLabel.setText("搜索结果: " + searchResults.size() + " 条记录");
-        } else {
-            tableModel.setRowCount(0);
-            rowToPostMap.clear();
-            paginationLabel.setText("没有找到包含 \"" + keyword + "\" 的帖子");
-        }
-    }
-
-    // 更新帖子元信息
-    public void updatePostMetaInfo(JDialog dialog, int postId) {
-        int newLikeCount = likeController.getLikeCount(postId);
-
-        Component[] components = dialog.getContentPane().getComponents();
-        for (Component component : components) {
-            if (component instanceof JPanel) {
-                JPanel panel = (JPanel) component;
-                Component[] subComponents = panel.getComponents();
-                for (Component subComponent : subComponents) {
-                    if (subComponent instanceof JPanel) {
-                        JPanel subPanel = (JPanel) subComponent;
-                        Component[] metaComponents = subPanel.getComponents();
-                        for (Component metaComponent : metaComponents) {
-                            if (metaComponent instanceof JLabel) {
-                                JLabel label = (JLabel) metaComponent;
-                                String text = label.getText();
-                                if (text != null && text.contains("点赞数")) {
-                                    label.setText(" | 点赞数: " + newLikeCount);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
