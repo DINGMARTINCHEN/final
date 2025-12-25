@@ -14,7 +14,6 @@ import java.io.File;
 
 public class PostCreateView extends JFrame {
     private User currentUser;
-    private int boardId;
     private Runnable refreshCallback;
     private PostController postController;
 
@@ -24,35 +23,45 @@ public class PostCreateView extends JFrame {
     private JButton chooseFileButton;
     private JButton submitButton;
     private JComboBox<String> postTypeComboBox;
+    private JComboBox<String> boardComboBox;  // 新增：版块选择下拉框
 
-    public PostCreateView(User user, int boardId, Runnable refreshCallback) {
+    public PostCreateView(User user, Runnable refreshCallback) {
         this.currentUser = user;
-        this.boardId = boardId;
         this.refreshCallback = refreshCallback;
         this.postController = new PostController();
 
         setTitle("发布新帖子");
-        setSize(600, 500);
+        setSize(650, 550);  // 增加宽度以适应更多控件
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // 顶部标题和帖子类型选择
-        JPanel top = new JPanel(new BorderLayout());
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        titlePanel.add(new JLabel("标题："));
-        titleField = new JTextField(30);
-        titlePanel.add(titleField);
+        // 顶部面板：标题和版块选择
+        JPanel top = new JPanel(new GridLayout(2, 2, 10, 10));
+        top.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
+        // 第一行：标题
+        top.add(new JLabel("标题：", JLabel.RIGHT));
+        titleField = new JTextField();
+        top.add(titleField);
+
+        // 第二行：版块选择
+        top.add(new JLabel("选择版块：", JLabel.RIGHT));
+        boardComboBox = new JComboBox<>(new String[]{"技术支持", "学习交流", "休闲娱乐", "校园生活"});
+        top.add(boardComboBox);
+
+        add(top, BorderLayout.NORTH);
+
+        // 中部面板：帖子类型选择和富文本编辑器
+        JPanel centerPanel = new JPanel(new BorderLayout());
+
+        // 帖子类型选择
         JPanel typePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         typePanel.add(new JLabel("帖子类型："));
         postTypeComboBox = new JComboBox<>(getAvailablePostTypes(user));
         typePanel.add(postTypeComboBox);
+        centerPanel.add(typePanel, BorderLayout.NORTH);
 
-        top.add(titlePanel, BorderLayout.NORTH);
-        top.add(typePanel, BorderLayout.SOUTH);
-        add(top, BorderLayout.NORTH);
-
-        // 中间内容：富文本编辑器 + 工具栏
+        // 富文本编辑器和工具栏
         JPanel editorPanel = new JPanel(new BorderLayout());
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
@@ -79,14 +88,21 @@ public class PostCreateView extends JFrame {
         contentEditor.setContentType("text/html");
         contentEditor.setEditorKit(new HTMLEditorKit());
         editorPanel.add(new JScrollPane(contentEditor), BorderLayout.CENTER);
-        add(editorPanel, BorderLayout.CENTER);
 
-        // 底部附件和按钮
-        JPanel bottom = new JPanel(new FlowLayout());
-        bottom.add(new JLabel("附件："));
+        centerPanel.add(editorPanel, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
+
+        // 底部面板：附件和按钮
+        JPanel bottom = new JPanel();
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
+        bottom.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // 附件选择
+        JPanel attachmentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        attachmentPanel.add(new JLabel("附件："));
         attachmentField = new JTextField(30);
         attachmentField.setEditable(false);
-        bottom.add(attachmentField);
+        attachmentPanel.add(attachmentField);
 
         chooseFileButton = new JButton("选择文件");
         chooseFileButton.addActionListener(e -> {
@@ -96,13 +112,22 @@ public class PostCreateView extends JFrame {
                 attachmentField.setText(file.getAbsolutePath());
             }
         });
-        bottom.add(chooseFileButton);
+        attachmentPanel.add(chooseFileButton);
+        bottom.add(attachmentPanel);
 
+        // 按钮面板
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         submitButton = new JButton("发布帖子");
         submitButton.addActionListener(e -> publishPost());
-        bottom.add(submitButton);
+        buttonPanel.add(submitButton);
 
+        JButton cancelButton = new JButton("取消");
+        cancelButton.addActionListener(e -> dispose());
+        buttonPanel.add(cancelButton);
+
+        bottom.add(buttonPanel);
         add(bottom, BorderLayout.SOUTH);
+
         setVisible(true);
     }
 
@@ -136,8 +161,17 @@ public class PostCreateView extends JFrame {
         String attachment = attachmentField.getText();
         String postType = (String) postTypeComboBox.getSelectedItem();
 
+        // 获取选择的版块
+        String boardName = (String) boardComboBox.getSelectedItem();
+        int boardId = getBoardIdByName(boardName);
+
         if (title.isEmpty() || content.isEmpty()) {
             JOptionPane.showMessageDialog(this, "标题和内容不能为空！");
+            return;
+        }
+
+        if (boardId == -1) {
+            JOptionPane.showMessageDialog(this, "请选择版块！");
             return;
         }
 
@@ -148,6 +182,16 @@ public class PostCreateView extends JFrame {
             JOptionPane.showMessageDialog(this, "发帖成功！");
             dispose();
             if (refreshCallback != null) refreshCallback.run();
+        }
+    }
+
+    private int getBoardIdByName(String boardName) {
+        switch (boardName) {
+            case "技术支持": return 1;
+            case "学习交流": return 2;
+            case "休闲娱乐": return 3;
+            case "校园生活": return 4;
+            default: return -1;
         }
     }
 }

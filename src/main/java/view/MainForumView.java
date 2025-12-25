@@ -8,6 +8,7 @@ import model.Reply;
 import model.User;
 import patterns.decorator.AttachmentDecorator;
 import patterns.strategy.PostSorter;
+import service.PostService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -34,6 +35,7 @@ public class MainForumView extends JFrame {
     public int pageSize = 10;
     public PostSorter postSorter;
     public String currentSort = "date";
+    private PostService postService;  // 新增：用于获取全部帖子
 
     public JTable postTable;
     public DefaultTableModel tableModel;
@@ -47,6 +49,7 @@ public class MainForumView extends JFrame {
         this.replyController = new ReplyController();
         this.likeController = new LikeController();
         this.postSorter = new PostSorter();
+        this.postService = new PostService();  // 新增：初始化PostService
         currentPosts = new ArrayList<>();
         initializeUI();
     }
@@ -68,9 +71,16 @@ public class MainForumView extends JFrame {
         boardComboBox = new JComboBox<>(new String[]{"全部版块", "技术支持", "学习交流", "休闲娱乐", "校园生活"});
         boardComboBox.addActionListener(e -> {
             int selectedIndex = boardComboBox.getSelectedIndex();
-            selectedBoardId = selectedIndex;
-            currentPage = 1;
-            postController.loadPostsForSelectedBoard(this);
+
+            if (selectedIndex == 0) {
+                // 选择"全部版块"
+                selectedBoardId = -1; // -1 表示全部版块
+                loadAllPosts();  // 新增方法：加载所有版块的帖子
+            } else {
+                selectedBoardId = selectedIndex; // 索引对应版块ID
+                currentPage = 1;
+                postController.loadPostsForSelectedBoard(this);
+            }
         });
 
         JButton sortByDateButton = new JButton("按时间排序");
@@ -158,16 +168,24 @@ public class MainForumView extends JFrame {
         refreshButton.addActionListener(e -> {
             isSearching = false;
             searchField.setText("");
-            postController.loadPostsForSelectedBoard(this);
+            if (selectedBoardId == -1) {
+                loadAllPosts();
+            } else {
+                postController.loadPostsForSelectedBoard(this);
+            }
         });
 
         JButton newPostButton = new JButton("发新帖");
         newPostButton.addActionListener(e -> {
-            if (selectedBoardId == -1 || selectedBoardId == 0) {
-                JOptionPane.showMessageDialog(this, "请先选择版块！");
-                return;
-            }
-            new PostCreateView(currentUser, selectedBoardId, () -> postController.loadPostsForSelectedBoard(this));
+            // 修改：打开发帖页面，不限制版块选择
+            new PostCreateView(currentUser, () -> {
+                // 刷新当前显示的帖子列表
+                if (selectedBoardId == -1) {
+                    loadAllPosts();
+                } else {
+                    postController.loadPostsForSelectedBoard(this);
+                }
+            });
         });
 
         JButton deleteButton = new JButton("删除帖子");
@@ -195,7 +213,129 @@ public class MainForumView extends JFrame {
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         add(mainPanel);
 
-        postController.loadPostsForSelectedBoard(this);
+        // 默认显示全部版块的帖子
+        boardComboBox.setSelectedIndex(0); // 选择"全部版块"
+        loadAllPosts();
+    }
+
+    /**
+     * 新增：加载所有版块的帖子
+     */
+    private void loadAllPosts() {
+        isSearching = false;
+        searchField.setText("");
+
+        try {
+            // 使用PostService搜索功能，搜索空字符串获取所有帖子
+            List<Post> allPosts = postService.searchPosts("");
+            if (allPosts != null && !allPosts.isEmpty()) {
+                // 为每个帖子设置点赞数
+                for (Post post : allPosts) {
+                    int likeCount = likeController.getLikeCount(post.getId());
+                    post.setLikeCount(likeCount);
+                }
+                currentPosts = allPosts;
+
+                // 分离置顶帖子和普通帖子
+                List<Post> pinnedPosts = new ArrayList<>();
+                List<Post> normalPosts = new ArrayList<>();
+
+                for (Post post : currentPosts) {
+                    if (post.isPinned()) {
+                        pinnedPosts.add(post);
+                    } else {
+                        normalPosts.add(post);
+                    }
+                }
+
+                // 按当前排序方式排序
+                if ("date".equals(currentSort)) {
+                    pinnedPosts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
+                    normalPosts.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
+                } else if ("views".equals(currentSort)) {
+                    pinnedPosts.sort((p1, p2) -> Integer.compare(p2.getViews(), p1.getViews()));
+                    normalPosts.sort((p1, p2) -> Integer.compare(p2.getViews(), p1.getViews()));
+                } else if ("likes".equals(currentSort)) {
+                    pinnedPosts.sort((p1, p2) -> Integer.compare(p2.getLikeCount(), p1.getLikeCount()));
+                    normalPosts.sort((p1, p2) -> Integer.compare(p2.getLikeCount(), p1.getLikeCount()));
+                }
+
+                // 合并列表：先显示置顶帖子，再显示普通帖子
+                List<Post> sortedPosts = new ArrayList<>();
+                sortedPosts.addAll(pinnedPosts);
+                sortedPosts.addAll(normalPosts);
+                currentPosts = sortedPosts;
+
+                // 刷新表格
+                refreshPostTable();
+                updatePaginationInfo();
+            } else {
+                tableModel.setRowCount(0);
+                rowToPostMap.clear();
+                paginationLabel.setText("暂无帖子");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "加载全部帖子失败：" + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 新增：刷新帖子表格（从PostController中提取逻辑）
+     */
+    private void refreshPostTable() {
+        tableModel.setRowCount(0);
+        rowToPostMap.clear(); // 清空旧的映射关系
+
+        List<Post> postsToDisplay = isSearching ? searchResults : currentPosts;
+        if (postsToDisplay == null || postsToDisplay.isEmpty()) {
+            paginationLabel.setText("没有找到相关帖子");
+            return;
+        }
+
+        int rowIndex = 0;
+
+        for (Post post : postsToDisplay) {
+            boolean hasLiked = likeController.hasLiked(currentUser.getId(), post.getId());
+            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
+
+            // 添加版块信息到标题
+            String boardInfo = getBoardNameById(post.getBoardId());
+            String titleWithBoard = "[" + boardInfo + "] " + post.getTitle();
+
+            // 如果是置顶帖子，添加标记
+            if (post.isPinned()) {
+                titleWithBoard = "[置顶] " + titleWithBoard;
+            }
+
+            tableModel.addRow(new Object[]{
+                    post.getId(),
+                    titleWithBoard,
+                    post.getUsername(),
+                    post.getCreatedAt(),
+                    post.getViews(),
+                    post.getReplyCount(),
+                    post.getLikeCount(),
+                    status
+            });
+
+            // 建立映射关系
+            rowToPostMap.put(rowIndex, post);
+            rowIndex++;
+        }
+    }
+
+    /**
+     * 新增：根据版块ID获取版块名称
+     */
+    private String getBoardNameById(int boardId) {
+        switch (boardId) {
+            case 1: return "技术";
+            case 2: return "学习";
+            case 3: return "娱乐";
+            case 4: return "生活";
+            default: return "未知";
+        }
     }
 
     /**
@@ -236,7 +376,8 @@ public class MainForumView extends JFrame {
         headerPanel.add(titleLabel, BorderLayout.NORTH);
 
         JPanel metaPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        metaPanel.add(new JLabel("作者: " + latestPost.getUsername()));
+        metaPanel.add(new JLabel("版块: " + getBoardNameById(latestPost.getBoardId())));
+        metaPanel.add(new JLabel(" | 作者: " + latestPost.getUsername()));
         metaPanel.add(new JLabel(" | 发布时间: " + latestPost.getCreatedAt()));
         metaPanel.add(new JLabel(" | 浏览量: " + latestPost.getViews()));
         metaPanel.add(new JLabel(" | 回复数: " + latestPost.getReplyCount()));
@@ -322,7 +463,12 @@ public class MainForumView extends JFrame {
             String result = likeController.likeWithVisitor(latestPost, currentUser.getId());
             JOptionPane.showMessageDialog(detailDialog, result);
             likeController.likeService.updateLikeButtonText(likeButton, latestPost.getId(), this, likeController);
-            postController.loadPostsForSelectedBoard(this);
+            // 刷新帖子列表
+            if (selectedBoardId == -1) {
+                loadAllPosts();
+            } else {
+                postController.loadPostsForSelectedBoard(this);
+            }
             postController.updatePostMetaInfo(detailDialog, latestPost.getId(), this);
         });
         actionPanel.add(likeButton);
@@ -338,7 +484,12 @@ public class MainForumView extends JFrame {
                     if (success) {
                         JOptionPane.showMessageDialog(detailDialog, "已取消置顶！");
                         detailDialog.dispose();
-                        postController.loadPostsForSelectedBoard(this);
+                        // 刷新帖子列表
+                        if (selectedBoardId == -1) {
+                            loadAllPosts();
+                        } else {
+                            postController.loadPostsForSelectedBoard(this);
+                        }
                     }
                 });
             } else {
@@ -348,7 +499,12 @@ public class MainForumView extends JFrame {
                     if (success) {
                         JOptionPane.showMessageDialog(detailDialog, "帖子已置顶！");
                         detailDialog.dispose();
-                        postController.loadPostsForSelectedBoard(this);
+                        // 刷新帖子列表
+                        if (selectedBoardId == -1) {
+                            loadAllPosts();
+                        } else {
+                            postController.loadPostsForSelectedBoard(this);
+                        }
                     }
                 });
             }
@@ -373,7 +529,14 @@ public class MainForumView extends JFrame {
             JButton editButton = new JButton("编辑帖子");
             editButton.addActionListener(e -> {
                 detailDialog.dispose();
-                new EditPostView(currentUser, latestPost, () -> postController.loadPostsForSelectedBoard(this));
+                new EditPostView(currentUser, latestPost, () -> {
+                    // 刷新帖子列表
+                    if (selectedBoardId == -1) {
+                        loadAllPosts();
+                    } else {
+                        postController.loadPostsForSelectedBoard(this);
+                    }
+                });
             });
             actionPanel.add(editButton);
         }
@@ -384,7 +547,6 @@ public class MainForumView extends JFrame {
 
         detailDialog.add(actionPanel, BorderLayout.NORTH);
         detailDialog.setVisible(true);
-        postController.loadPostsForSelectedBoard(this);
     }
 
     private boolean canPinPost() {
@@ -410,7 +572,12 @@ public class MainForumView extends JFrame {
             JOptionPane.showMessageDialog(dialog, "回复发表成功！");
             replyTextArea.setText("");
             loadRepliesToTable(post.getId(), replyTableModel);
-            postController.loadPostsForSelectedBoard(this);
+            // 刷新帖子列表
+            if (selectedBoardId == -1) {
+                loadAllPosts();
+            } else {
+                postController.loadPostsForSelectedBoard(this);
+            }
         }
     }
 

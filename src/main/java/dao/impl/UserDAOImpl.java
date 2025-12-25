@@ -80,23 +80,4 @@ public class UserDAOImpl implements UserDAO {
         return users;
     }
 
-    // 根据ID查询用户
-    public User getUserById(int id) throws SQLException {
-        String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setUsername(rs.getString("username"));
-                user.setPassword(rs.getString("password"));
-                user.setRole(rs.getString("role"));
-                user.setEmail(rs.getString("email"));
-                return user;
-            }
-        }
-        return null;
-    }
 }
