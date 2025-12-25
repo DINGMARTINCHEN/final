@@ -288,7 +288,7 @@ public class PostController {
         // 先显示置顶帖子
         for (Post post : pinnedPosts) {
             boolean hasLiked = mainForumView.likeController.hasLiked(mainForumView.currentUser.getId(), post.getId());
-            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
+            String status = hasLiked ? "❤" : " ";
 
             mainForumView.tableModel.addRow(new Object[]{
                     post.getId(),
@@ -309,7 +309,7 @@ public class PostController {
         // 再显示普通帖子
         for (Post post : normalPosts) {
             boolean hasLiked = mainForumView.likeController.hasLiked(mainForumView.currentUser.getId(), post.getId());
-            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
+            String status = hasLiked ? "❤" : " ";
 
             mainForumView.tableModel.addRow(new Object[]{
                     post.getId(),

@@ -297,7 +297,7 @@ public class MainForumView extends JFrame {
 
         for (Post post : postsToDisplay) {
             boolean hasLiked = likeController.hasLiked(currentUser.getId(), post.getId());
-            String status = hasLiked ? "❤️ 已赞" : "🤍 未赞";
+            String status = hasLiked ? "❤" : " ";
 
             // 添加版块信息到标题
             String boardInfo = getBoardNameById(post.getBoardId());

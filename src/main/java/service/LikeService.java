@@ -87,10 +87,10 @@ public class LikeService {
         int likeCount = likeController.getLikeCount(postId);
 
         if (hasLiked) {
-            likeButton.setText("❤️ 取消点赞 (" + likeCount + ")");
+            likeButton.setText("取消点赞 (" + likeCount + ")");
             likeButton.setForeground(Color.RED);
         } else {
-            likeButton.setText("🤍 点赞 (" + likeCount + ")");
+            likeButton.setText("点赞 (" + likeCount + ")");
             likeButton.setForeground(Color.BLACK);
         }
     }
