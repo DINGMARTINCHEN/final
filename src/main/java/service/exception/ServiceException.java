@@ -1,4 +1,3 @@
-// src/service/exception/ServiceException.java
 package service.exception;
 
 /**

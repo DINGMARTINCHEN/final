@@ -1,14 +1,9 @@
-// src/patterns/visitor/VisitorTest.java
 package patterns.visitor;
 
 import model.Post;
 import model.User;
 import java.util.Date;
 
-/**
- * 访问者模式验证程序
- * 运行后显示个人信息，并演示点赞功能
- */
 public class VisitorTest {
     public static void main(String[] args) {
         // 显著位置显示个人信息

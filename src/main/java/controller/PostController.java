@@ -1,4 +1,3 @@
-// src/controller/PostController.java
 package controller;
 
 import patterns.strategy.SortByDate;

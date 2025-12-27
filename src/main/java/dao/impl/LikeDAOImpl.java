@@ -1,4 +1,3 @@
-// src/dao/impl/LikeDAOImpl.java
 package dao.impl;
 
 import dao.LikeDAO;

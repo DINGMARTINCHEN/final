@@ -1,4 +1,3 @@
-// src/model/Board.java
 package model;
 
 /**

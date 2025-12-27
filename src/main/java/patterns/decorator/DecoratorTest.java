@@ -1,4 +1,3 @@
-// src/patterns/decorator/DecoratorTest.java
 package patterns.decorator;
 
 import model.Post;
@@ -29,7 +28,7 @@ public class DecoratorTest {
         System.out.println("附件：" + (basicPost.getAttachment() != null ? basicPost.getAttachment() : "无"));
 
         // 使用装饰器添加附件
-        Post decoratedPost = new AttachmentDecorator(basicPost, "D:\\documents\\篮球比赛规则.pdf");
+        Post decoratedPost = new AttachmentDecorator(basicPost, "篮球比赛规则.pdf");
 
         System.out.println("\n=== 装饰后帖子内容 ===");
         System.out.println("标题：" + decoratedPost.getTitle());

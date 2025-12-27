@@ -1,5 +1,3 @@
-// 新增 SortByViews.java（按浏览量排序）
-// src/patterns/strategy/SortByViews.java
 package patterns.strategy;
 
 import model.Post;

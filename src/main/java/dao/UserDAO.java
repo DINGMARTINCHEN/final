@@ -1,5 +1,3 @@
-// DAO 层 - 用户数据访问接口
-// src/dao/UserDAO.java
 package dao;
 
 import model.User;

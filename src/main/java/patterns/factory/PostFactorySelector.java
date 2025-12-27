@@ -1,4 +1,3 @@
-// src/patterns/factory/PostFactorySelector.java
 package patterns.factory;
 
 import model.User;

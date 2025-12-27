@@ -1,4 +1,3 @@
-// src/dao/impl/PostDAOImpl.java
 package dao.impl;
 
 import dao.PostDAO;

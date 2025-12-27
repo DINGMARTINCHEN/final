@@ -1,5 +1,3 @@
-// Model Layer - 用户实体类
-// src/model/User.java
 package model;
 
 /**

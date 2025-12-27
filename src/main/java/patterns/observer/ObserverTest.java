@@ -1,10 +1,6 @@
-// src/patterns/observer/ObserverTest.java
 package patterns.observer;
 
-/**
- * 观察者模式验证程序
- * 运行后显示个人信息，并模拟帖子更新通知多个观察者
- */
+
 public class ObserverTest {
     public static void main(String[] args) {
         // 显著位置显示个人信息

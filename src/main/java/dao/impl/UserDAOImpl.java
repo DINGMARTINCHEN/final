@@ -1,4 +1,3 @@
-// src/dao/impl/UserDAOImpl.java
 package dao.impl;
 
 import dao.UserDAO;
@@ -9,10 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * UserDAO 接口的实现类
- * 负责用户相关的数据库操作
- */
 public class UserDAOImpl implements UserDAO {
 
     @Override

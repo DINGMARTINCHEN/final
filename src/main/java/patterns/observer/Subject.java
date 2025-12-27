@@ -1,5 +1,3 @@
-// 设计模式2：观察者模式
-//定义对象间一对多依赖，当主题状态变化时，所有观察者自动收到通知。
 package patterns.observer;
 
 import java.util.ArrayList;

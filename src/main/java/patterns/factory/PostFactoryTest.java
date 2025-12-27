@@ -1,4 +1,3 @@
-// src/patterns/factory/PostFactoryTest.java
 package patterns.factory;
 
 import model.Post;

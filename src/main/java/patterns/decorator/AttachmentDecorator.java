@@ -1,4 +1,3 @@
-// src/patterns/decorator/AttachmentDecorator.java
 package patterns.decorator;
 
 import model.Post;

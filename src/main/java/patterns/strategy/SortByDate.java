@@ -1,4 +1,3 @@
-// src/patterns/strategy/SortByDate.java
 package patterns.strategy;
 
 import model.Post;

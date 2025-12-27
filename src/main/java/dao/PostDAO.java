@@ -1,4 +1,3 @@
-// src/dao/PostDAO.java
 package dao;
 
 import model.Post;

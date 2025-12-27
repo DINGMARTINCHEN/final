@@ -1,66 +1,56 @@
 @startuml
+' 抽象元素：帖子接口
 interface PostElement {
-  + accept(visitor: PostVisitor): String
+  + accept(visitor: PostVisitor, userId: int): String
+  + getId(): int
+  + getLikeCount(): int
+  + setLikeCount(count: int): void
+  + getUserId(): int
 }
 
-class Post implements PostElement {
+' 具体元素：基础帖子类
+class BasePost implements PostElement {
   - id: int
   - title: String
   - content: String
   - userId: int
-  - boardId: int
-  - createdAt: Date
-  - attachment: String
-  - views: int
-  - replyCount: int
-  - username: String
-  - pinned: boolean
   - likeCount: int
-  + accept(visitor: PostVisitor): String
+  - createTime: Date
+  + BasePost(title: String, content: String, userId: int)
+  + accept(visitor: PostVisitor, userId: int): String
   + getId(): int
-  + setId(id: int): void
-  + getTitle(): String
-  + setTitle(title: String): void
-  + getContent(): String
-  + setContent(content: String): void
-  + getUserId(): int
-  + setUserId(userId: int): void
-  + getBoardId(): int
-  + setBoardId(boardId: int): void
-  + getCreatedAt(): Date
-  + setCreatedAt(createdAt: Date): void
-  + getAttachment(): String
-  + setAttachment(attachment: String): void
-  + getViews(): int
-  + setViews(views: int): void
-  + getReplyCount(): int
-  + setReplyCount(replyCount: int): void
-  + getUsername(): String
-  + setUsername(username: String): void
-  + isPinned(): boolean
-  + setPinned(pinned: boolean): void
   + getLikeCount(): int
-  + setLikeCount(likeCount: int): void
+  + setLikeCount(count: int): void
+  + getUserId(): int
 }
 
-abstract class PostDecorator implements PostElement {
-  - post: PostElement
-  + PostDecorator(post: PostElement)
-  + accept(visitor: PostVisitor): String
+' 抽象访问者：帖子操作访问者接口
+interface PostVisitor {
+  + visit(post: BasePost, userId: int): String
 }
 
-class AttachmentDecorator extends PostDecorator {
-  - attachmentPath: String
-  - fileName: String
-  + AttachmentDecorator(post: PostElement, attachmentPath: String, fileName: String)
-  + getAttachmentPath(): String
-  + getFileName(): String
-  + getContent(): String
-  + accept(visitor: PostVisitor): String
+' 具体访问者：点赞访问者
+class LikeVisitor implements PostVisitor {
+  - likeRecords: Map<String, Boolean>  // key: userId_postId, value: 是否点赞
+  + LikeVisitor()
+  + visit(post: BasePost, userId: int): String
+  + hasLiked(userId: int, postId: int): boolean
 }
 
-PostElement <|-- Post
-PostElement <|-- PostDecorator
-PostDecorator <|-- AttachmentDecorator
-PostDecorator *-- PostElement : contains
+' 辅助类：点赞记录管理
+class LikeRecordManager {
+  - static likeMap: Map<String, Boolean>
+  + static isLiked(userId: int, postId: int): boolean
+  + static setLikeStatus(userId: int, postId: int, status: boolean): void
+}
+
+' 通知服务（联动观察者模式）
+class NotificationService {
+  + sendLikeNotification(post: BasePost, userId: int): void
+}
+
+' 关系
+BasePost --> LikeVisitor: 接受访问
+LikeVisitor --> LikeRecordManager: 调用
+LikeVisitor --> NotificationService: 调用
 @enduml

@@ -1,4 +1,3 @@
-// src/service/PostService.java
 package service;
 
 import dao.PostDAO;

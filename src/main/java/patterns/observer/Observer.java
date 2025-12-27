@@ -1,4 +1,3 @@
-// src/patterns/observer/Observer.java
 package patterns.observer;
 
 /**

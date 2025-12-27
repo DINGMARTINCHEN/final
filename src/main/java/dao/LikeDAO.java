@@ -1,4 +1,3 @@
-// src/dao/LikeDAO.java
 package dao;
 
 import java.sql.SQLException;

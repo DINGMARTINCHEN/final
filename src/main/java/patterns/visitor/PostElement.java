@@ -1,4 +1,3 @@
-// src/patterns/visitor/PostElement.java
 package patterns.visitor;
 
 /**

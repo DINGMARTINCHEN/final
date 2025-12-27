@@ -1,9 +1,5 @@
-// src/patterns/observer/UserObserver.java
 package patterns.observer;
 
-/**
- * 具体的观察者：用户
- */
 public class UserObserver implements Observer {
     private String username;
 

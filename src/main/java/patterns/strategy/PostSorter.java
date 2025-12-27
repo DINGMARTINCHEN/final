@@ -1,5 +1,3 @@
-// src/patterns/strategy/PostSorter.java
-//将算法封装成独立策略类，上下文动态切换策略。
 package patterns.strategy;
 
 import model.Post;

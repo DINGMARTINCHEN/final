@@ -1,4 +1,3 @@
-// src/controller/UserController.java
 package controller;
 
 import service.UserService;

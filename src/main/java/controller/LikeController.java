@@ -1,4 +1,3 @@
-// src/controller/LikeController.java
 package controller;
 
 import service.LikeService;

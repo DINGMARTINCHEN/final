@@ -1,4 +1,3 @@
-// src/patterns/visitor/PostVisitor.java
 package patterns.visitor;
 
 import model.Post;

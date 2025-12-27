@@ -1,4 +1,3 @@
-// src/patterns/visitor/LikeVisitor.java
 package patterns.visitor;
 
 import dao.impl.LikeDAOImpl;

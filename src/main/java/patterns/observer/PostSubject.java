@@ -1,5 +1,3 @@
-// src/patterns/observer/PostSubject.java
-//postUpdated() 触发通知
 package patterns.observer;
 
 /**

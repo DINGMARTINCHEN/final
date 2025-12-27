@@ -1,5 +1,3 @@
-// 设计模式3：策略模式 - 帖子排序
-// src/patterns/strategy/SortStrategy.java
 package patterns.strategy;
 
 import model.Post;

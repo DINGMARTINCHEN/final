@@ -1,4 +1,3 @@
-// src/patterns/strategy/StrategyTest.java
 package patterns.strategy;
 
 import model.Post;

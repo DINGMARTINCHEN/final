@@ -1,5 +1,3 @@
-// 设计模式1：工厂方法模式 - 创建帖子
-// src/patterns/factory/PostFactory.java
 package patterns.factory;
 
 import model.Post;
