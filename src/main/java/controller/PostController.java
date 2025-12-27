@@ -1,6 +1,7 @@
 package controller;
 
 import patterns.strategy.SortByDate;
+import patterns.strategy.SortByLikes;
 import patterns.strategy.SortByViews;
 import service.PostService;
 import model.Post;
@@ -146,7 +147,8 @@ public class PostController {
             mainForumView.postSorter.setStrategy(new SortByViews());
             mainForumView.postSorter.sortPosts(mainForumView.currentPosts);
         } else if ("likes".equals(mainForumView.currentSort)) {
-            mainForumView.currentPosts.sort((p1, p2) -> Integer.compare(p2.getLikeCount(), p1.getLikeCount()));
+            mainForumView.postSorter.setStrategy(new SortByLikes());
+            mainForumView.postSorter.sortPosts(mainForumView.currentPosts);
         }
 
         mainForumView.postController.refreshPostTable(mainForumView);
